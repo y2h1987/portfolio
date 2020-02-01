@@ -1,3 +1,6 @@
+''' This program splits the data into multiple chunks and then using multiple threads to parse data into
+    an SQL Table '''
+
 import pandas as pd
 import concurrent.futures
 import sqlalchemy as sa
@@ -11,40 +14,44 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Table, Column, Float, Integer, String, MetaData, ForeignKey, Unicode
 from sqlalchemy.pool import QueuePool
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
 
-def RunD(df_chunk, i):
-    startTime_sub_01 = datetime.now()
-    print("[" + str(i) + "] - Converting Data to Dict")
-    listToWrite = df_chunk.to_dict(orient='records')
-    print("[" + str(i) + "] - Completed Data to Dict : " + str(datetime.now() - startTime_sub_01))
-    #print(listToWrite)
-    #load to SQL
-    print("[" + str(i) + "] - Metadata")
-    metadata = sa.schema.MetaData(bind=engine)
-    metadata.reflect(engine, only=[tableName])
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    startTime_sub_02 = datetime.now()
-    print("[" + str(i) + "] - Loading to SQL")
-    session.bulk_insert_mappings(schema_Meritz, listToWrite)
-    session.commit()
-    session.close()
-    print("[" + str(i) + "] - Completed : " + str(datetime.now() - startTime_sub_02))
 
-#Create Python Console Settings
+#Python Console Settings
 startTime = datetime.now()
 pd.set_option('display.max_rows', 50)
 pd.set_option('display.max_columns', 150)
 pd.set_option('display.width', 200)
 pd.options.display.float_format = '{:,.2f}'.format
 
-#SQL Settings 
-databaseName = 'Ops_KR_Meritz_ry'
-tableName = 'KR_KR_Meritz_ALL'
-connectionString = 'mssql+pyodbc://plresgpsql01v/' + databaseName + '?Driver={SQL Server Native Client 11.0}'
+def RunD(df_chunk, i):
+    ''' This function converts the dataframe into a dictionary for bulk insert into sql'''
 
-#Create SQL Connection 
+    # start conversion
+    print("[" + str(i) + "] - Converting Data to Dict")
+    startTime_sub_01 = datetime.now()
+    listToWrite = df_chunk.to_dict(orient='records')
+    print("[" + str(i) + "] - Completed Data to Dict : " + str(datetime.now() - startTime_sub_01))
+
+    #load to SQL
+    print("[" + str(i) + "] - Metadata")
+    metadata = sa.schema.MetaData(bind=engine)
+    metadata.reflect(engine, only=[tableName])
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    print("[" + str(i) + "] - Loading to SQL")
+    startTime_sub_02 = datetime.now()
+    session.bulk_insert_mappings(schema_Meritz, listToWrite)
+    session.commit()
+    session.close()
+    print("[" + str(i) + "] - Completed : " + str(datetime.now() - startTime_sub_02))
+
+
+#SQL Settings
+databaseName = 'SQL_DB'
+tableName = 'SQL_TABLE'
+connectionString = 'mssql+pyodbc://<<ID>>/' + databaseName + '?Driver={SQL Server Native Client 11.0}'
+
+#Create SQL Connection
 engine = sa.create_engine(connectionString, poolclass=QueuePool, pool_size=10, fast_executemany=True)
 Base = declarative_base()
 conn = engine.connect()
@@ -52,44 +59,39 @@ conn = engine.connect()
 #Create Schema for Table
 class schema_Meritz(Base):
     __tablename__ = tableName
-    Index = Column(Integer,primary_key= True)
-    CLOG_YYMM = Column(Integer)
-    POL_NO = Column(String(20))
-    SBCP_DT = Column(String(10))
-    UNT_PD_NM = Column(Unicode(50,collation='Korean_Wansung_CI_AS'))
-    PD_COV_NM = Column(Unicode(50,collation='Korean_Wansung_CI_AS'))  #collation is done do enable column to accept korean language
-    SBC_AMT = Column(Float)
-    BDT_YMD = Column(String(10))
-    GNDR_CD = Column(String(10))
-    RSK_PREM = Column(Float)
-    CSS_PREM = Column(Float)
-    UNT_PD_CD = Column(String(20))
-    COV_CD = Column(String(20))
-    INS_PRD = Column(String(10))
-    OBJ_GRD_CD = Column(String(10))
-    INS_AGE = Column(String(10))
-    FNAME = Column(String(255))
+    COL1 = Column(Integer,primary_key= True)
+    COL2 = Column(Integer)
+    COL3 = Column(String(20))
+    COL4 = Column(String(10))
+    COL5 = Column(Unicode(50,collation='Korean_Wansung_CI_AS'))
+    COL6 = Column(Unicode(50,collation='Korean_Wansung_CI_AS'))  #collation is done do enable column to accept korean language
+    COL7 = Column(Float)
+    COL8 = Column(String(10))
+    COL9 = Column(String(10))
+    COL10 = Column(Float)
+    COL11 = Column(Float)
+    COL12 = Column(String(20))
+    COL13 = Column(String(20))
+    COL14 = Column(String(10))
+    COL15 = Column(String(10))
+    COL16 = Column(String(10))
+    COL17 = Column(String(255))
     #returns object representation
     def __repr__(self):
-        return "(Index='%s', CLOG_YYMM='%s', POL_NO='%s', SBCP_DT='%s',\
-                 UNT_PD_NM='%s', PD_COV_NM='%s', SBC_AMT='%s', BDT_YMD='%s', \
-                 GNDR_CD='%s', RSK_PREM='%s', CSS_PREM='%s', UNT_PD_CD='%s', \
-                 COV_CD='%s', INS_PRD='%s', OBJ_GRD_CD='%s', INS_AGE='%s')" % (self.Index, self.CLOG_YYMM, self.POL_NO, self.SBCP_DT, \
-                                                                               self.UNT_PD_NM, self.PD_COV_NM, self.SBC_AMT, self.BDT_YMD, \
-                                                                               self.GNDR_CD, self.RSK_PREM, self.CSS_PREM, self.UNT_PD_CD, \
-                                                                               self.COV_CD, self.INS_PRD, self.OBJ_GRD_CD, self.INS_AGE)
+        return ""
 
+#Create table if it doesnt exists
 if not engine.dialect.has_table(engine,tableName):
     print("No Existing Table Found")
     schema_Meritz.__table__.create(bind=engine, checkfirst=True)
     print("Created Table " + tableName)
 
-
 #Set Raw Data Path and Name
-fpath = r'H:\01_Maps\KR_MERITZ\Data\To_Load\\'
-fpath_name = '*.txt' #'PacificLifeRe_201901.txt'
-archivePath =r'H:\01_Maps\KR_MERITZ\Data\To_Load\Archive\\'
+fpath = r'<<FILEPATH>>'
+fpath_name = '*.txt'
+archivePath =r'<<ARCHIVEPATH>>'
 
+#Execute the load for each file in folder
 for FileList in glob.glob(fpath + fpath_name):
     fname = os.path.basename(FileList)
     print(fname)
@@ -98,6 +100,7 @@ for FileList in glob.glob(fpath + fpath_name):
     df_exist = pd.read_sql_query(SQLQuery, params=[fname], con=conn)
     print(df_exist)
 
+    #if data has not been loaded before
     if len(df_exist) == 0 :
         #Read and process raw data
         df = pd.read_csv(fpath + fname, sep='|', dtype=str, header=0)
