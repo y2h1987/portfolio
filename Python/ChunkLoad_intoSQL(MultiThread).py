@@ -40,7 +40,7 @@ def RunD(df_chunk, i):
     session = Session()
     print("[" + str(i) + "] - Loading to SQL")
     startTime_sub_02 = datetime.now()
-    session.bulk_insert_mappings(schema_Meritz, listToWrite)
+    session.bulk_insert_mappings(schema_1, listToWrite)
     session.commit()
     session.close()
     print("[" + str(i) + "] - Completed : " + str(datetime.now() - startTime_sub_02))
@@ -57,7 +57,7 @@ Base = declarative_base()
 conn = engine.connect()
 
 #Create Schema for Table
-class schema_Meritz(Base):
+class schema_1(Base):
     __tablename__ = tableName
     COL1 = Column(Integer,primary_key= True)
     COL2 = Column(Integer)
