@@ -70,10 +70,10 @@ def processData(FileList):
     #check if the file number exist, if exist add a number behind
     while os.path.exists(procPath + fileName):
         i = i + 1
-        fileName = 'KR_KR_MERITZ_SIPROD' + str(i) + '_' + fullDate + '_' + dataDate + ext
+        fileName = '<<FILESUFFIX>>' + str(i) + '_' + fullDate + '_' + dataDate + ext
         #print(name + str(i) )
 
-    #fileName = 'KR_KR_MERITZ_SIPROD' + str(i) + '_' + fullDate + '_' + dataDate + ext
+    
     print (fileName)
 
     df_Data.to_csv(procPath + fileName, sep='|', index=False, encoding='UTF-8')
