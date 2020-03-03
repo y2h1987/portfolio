@@ -83,7 +83,7 @@ class schema_1(Base):
 #Create table if it doesnt exists
 if not engine.dialect.has_table(engine,tableName):
     print("No Existing Table Found")
-    schema_Meritz.__table__.create(bind=engine, checkfirst=True)
+    schema_1.__table__.create(bind=engine, checkfirst=True)
     print("Created Table " + tableName)
 
 #Set Raw Data Path and Name
